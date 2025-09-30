@@ -57,3 +57,31 @@ jobs:
         run: |
           sleep 20
           curl -f http://192.168.56.101:8080/health
+
+      - name: Rollback to previous build
+        if: failure()
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.STATGING_SSH_KEY }}
+          script: | 
+            cd ~/big_tech_deployment
+            docker stop myapp || true
+            docker rm myapp || true
+            docker run -d -p 8080:80 --name myapp vblueice/myapp:build-${{ github.run_number - 1 }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
