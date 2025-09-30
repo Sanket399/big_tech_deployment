@@ -47,5 +47,5 @@ jobs:
 
       - name: Test health endpoint
         run: |
-          sleep 5
-          curl -f http://localhost:8080/health
+          sleep 20
+          curl -f http://192.168.56.101:8080/health
