@@ -7,7 +7,7 @@ def health():
 
 @app.route("/")
 def home():
-    return "Hello from CI/CD pipeline!"
+    return "Hello from CI/CD pipeline! From VM ;)"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
