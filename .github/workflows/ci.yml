@@ -64,7 +64,10 @@ jobs:
           curl -f http://192.168.56.101:8080/doesnotexists
 
       - name: Set previous Run Number
-        run: echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
+        if: always()
+        run: |
+          echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
+          echo "Previous build number set to $(( ${GITHUB_RUN_NUMBER} - 1 ))"
 
       - name: Rollback to previous build
         if: failure()
