@@ -83,7 +83,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git tag $APP_VERSION
-          git push origin $APP_VERSION
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sanket399/big_tech_deployment.git $APP_VERSION
 
 
 
