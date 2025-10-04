@@ -61,7 +61,7 @@ jobs:
       - name: Test health endpoint
         run: |
           sleep 20
-          curl -f http://192.168.56.101:8080/health
+          curl -f http://192.168.56.101:8080/doesnotexists
 
       - name: Set previous Run Number
         run: echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
