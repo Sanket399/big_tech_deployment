@@ -17,12 +17,11 @@ The focus is on **automation, versioned Docker builds, and deployment workflows*
 ---
 
 ## Structure
-
-├── app.py # Minimal static app
-├── Dockerfile # Container configuration
-├── requirements.txt # Dependencies
-├── .github/workflows # CI/CD pipeline workflow
-└── LICENSE
+    ├── app.py # Minimal static app
+    ├── Dockerfile # Container configuration
+    ├── requirements.txt # Dependencies
+    ├── .github/workflows # CI/CD pipeline workflow
+    └── LICENSE
 ---
 
 ## Next Steps
