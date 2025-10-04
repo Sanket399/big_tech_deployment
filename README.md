@@ -1,39 +1,33 @@
-# Big Tech Deployment: CI/CD Learning Project
+# Big Tech Deployment
 
-This project is a hands-on experiment to understand how large-scale applications are built, deployed, and managed in real-world environments.  
+A minimal web application deployed through a fully automated CI/CD pipeline.  
 
-The app itself is trivial — just a basic one-line page — but the main focus is the **CI/CD pipeline and deployment workflow**, designed to mimic the practices of big tech companies.
-
----
-
-## Purpose
-
-- Learn to **automate builds, tagging, and Docker image management**.
-- Practice **deployment via SSH** to a virtual machine.
-- Implement **rollback mechanisms** based on health checks.
-- Explore **Git tagging** as part of release management.
-- Set the foundation for **multi-environment deployments** and **Kubernetes orchestration** in the future.
+The focus is on **automation, versioned Docker builds, and deployment workflows**, with built-in rollback in case of failed health checks.  
 
 ---
 
-## Key Learnings So Far
+## Features
 
-- Versioning Docker images dynamically using GitHub run numbers.
-- Using GitHub Actions for **full CI/CD automation**.
-- Handling deployment failures and **rolling back safely**.
-- Integrating **Docker Hub** into CI pipelines.
-- Basic health checks to ensure deployed services are running.
-
----
-
-## Future Plans
-
-- Introduce separate **staging and production environments**.
-- Migrate deployments to **Kubernetes clusters**.
-- Implement **more complex apps** with real functionality.
-- Experiment with **advanced CI/CD features**, such as blue-green deployments, canary releases, and automated monitoring.
+- Automatic Docker image build, tagging, and push to Docker Hub.
+- Deployments via SSH to a VM.
+- Health check validation with automatic rollback.
+- Git tagging integrated with releases.
+- Multi-tag Docker strategy: `build-<run_number>`, `1.0.<run_number>`, `latest`.
 
 ---
 
-This project is mainly a personal sandbox to **experiment and learn the deployment practices of big tech**.
+## Structure
+
+├── app.py # Minimal static app
+├── Dockerfile # Container configuration
+├── requirements.txt # Dependencies
+├── .github/workflows # CI/CD pipeline workflow
+└── LICENSE
+---
+
+## Next Steps
+
+- Separate staging and production environments.
+- Kubernetes-based deployment.
+- Advanced CI/CD patterns: blue-green, canary, automated monitoring.
 
