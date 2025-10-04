@@ -19,7 +19,9 @@ jobs:
           echo "IMAGE=vblueice/myapp" >> $GITHUB_ENV
           echo "BUILD_VERSION=build-${{ github.run_number }}" >> $GITHUB_ENV
           echo "APP_VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "IMAGE_TAGS=$IMAGE:$BUILD_VERSION $IMAGE:$APP_VERSION $IMAGE:latest" >> $GITHUB_ENV
+
+      - name: Set Image Tag
+        run: echo "IMAGE_TAGS=$IMAGE:$BUILD_VERSION $IMAGE:$APP_VERSION $IMAGE:latest" >> $GITHUB_ENV
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
