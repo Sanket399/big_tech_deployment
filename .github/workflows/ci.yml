@@ -38,7 +38,7 @@ jobs:
       - name: Push Docker Image to Docker Hub
         run: |
           for tag in $IMAGE_TAGS; do
-            docker push $tag .
+            docker push $tag
           done
 
       - name: Deploy to Staging VM
