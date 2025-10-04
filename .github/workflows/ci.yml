@@ -13,6 +13,13 @@ jobs:
 
       #- name: Build Docker Image
       #  run: docker build -t myapp:test .
+      
+      - name: Set Version
+        run: |
+          echo "IMAGE=vblueice/myapp" >> $GITHUB_ENV
+          echo "BUILD_VERSION=build-${{ github.run_number }}" >> $GITHUB_ENV
+          echo "APP_VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAGS={{ env.IMAGE }}:{{ env.BUILD_VERSION }} ${{ env.IMAGE }}:${{ env.APP_VERSION }} ${{ env.IMAGE }}:latest" >> $GITHUB_ENV
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -22,17 +29,15 @@ jobs:
       
       - name: Build and Tag Docker Image
         run: |
-          IMAGE=vblueice/myapp
-          VERSION=build-${{ github.run_number }}
-          docker build -t $IMAGE:$VERSION .
-          docker tag $IMAGE:$VERSION $IMAGE:latest
+          for tag in $IMAGE_TAGS; do
+            docker build -t $tag .
+          done
 
       - name: Push Docker Image to Docker Hub
         run: |
-          IMAGE=vblueice/myapp
-          VERSION=build-${{ github.run_number }}
-          docker push $IMAGE:$VERSION
-          docker push $IMAGE:latest
+          for tag in $IMAGE_TAG; do
+            docker push $tag .
+          done
 
       - name: Deploy to Staging VM
         uses: appleboy/ssh-action@v0.1.7
@@ -41,13 +46,10 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            IMAGE=vblueice/myapp
-            VERSION=build-${{ github.run_number }}
-            cd ~/big_tech_deployment
             docker stop myapp || true
             docker rm myapp || true
-            docker pull $IMAGE:$VERSION
-            docker run -d -p 8080:80 --name myapp $IMAGE:$VERSION
+            docker pull $IMAGE:$APP_VERSION
+            docker run -d -p 8080:80 --name myapp $IMAGE:$APP_VERSION
 
 
       #- name: Run Container
@@ -56,7 +58,7 @@ jobs:
       - name: Test health endpoint
         run: |
           sleep 20
-          curl -f http://192.168.56.101:8080/doesnotexist
+          curl -f http://192.168.56.101:8080/health
 
       - name: Set previous Run Number
         run: echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
@@ -69,11 +71,16 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: | 
-            cd ~/big_tech_deployment
             docker stop myapp || true
             docker rm myapp || true
             docker run -d -p 8080:80 --name myapp vblueice/myapp:build-${{ env.PREV_BUILD }}
 
+      - name: Create Git Tag
+        run : |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag $APP_VERSION
+          git push origin $APP_VERSION
 
 
 
