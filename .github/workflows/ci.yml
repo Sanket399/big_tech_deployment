@@ -82,8 +82,18 @@ jobs:
         run : |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git tag $APP_VERSION
-          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sanket399/big_tech_deployment.git $APP_VERSION
+
+          git fetch --tags
+
+          if git rev-parse "$APP_VERSION" >/dev/null 2>&1; then
+            echo "Tag $APP_VERSION already exists locally. Skipping creation. "
+          elif git ls-remote --tags origin | grep "refs/tags/$APP_VERSION" > /dev/null; then
+            echo "Tag $APP_VERSION already exists on remote. Skipping creation. "
+          else
+           echo "Creating and pushing new tag: $APP_VERSION"
+           git tag $APP_VERSION
+           git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sanket399/big_tech_deployment.git $APP_VERSION
+          fi
 
 
 
