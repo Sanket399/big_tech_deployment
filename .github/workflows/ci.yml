@@ -51,8 +51,8 @@ jobs:
           script: |
             docker stop myapp || true
             docker rm myapp || true
-            docker pull $IMAGE:$APP_VERSION
-            docker run -d -p 8080:80 --name myapp $IMAGE:$APP_VERSION
+            docker pull ${{ env.IMAGE }}:${{ env.APP_VERSION }}
+            docker run -d -p 8080:80 --name myapp ${{ env.IMAGE }}:${{ env.APP_VERSION }}
 
 
       #- name: Run Container
