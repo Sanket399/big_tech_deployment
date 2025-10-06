@@ -78,7 +78,7 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
-          script: | 
+          script: |
             echo "Staging health check failed. Rolling back..."
             docker-compose stop staging
             docker-compose rm -f staging
@@ -118,7 +118,7 @@ jobs:
           git fetch --tags
 
           if git rev-parse "$APP_VERSION" >/dev/null 2>&1; then
-            echo "Tag $APP_VERSION already exists locally. Skipping creation. "
+            echo "Tag $APP_VERSION already exists locally. Skipping creation. "
           elif git ls-remote --tags origin | grep "refs/tags/$APP_VERSION" > /dev/null; then
             echo "Tag $APP_VERSION already exists on remote. Skipping creation. "
           else
