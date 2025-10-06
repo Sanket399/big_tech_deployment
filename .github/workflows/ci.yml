@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/env-separation" ]
 
 jobs:
   build:
@@ -30,18 +30,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       
-      - name: Build and Tag Docker Image
+      - name: Build and Push Docker Image
         run: |
           for tag in $IMAGE_TAGS; do
             docker build -t $tag .
-          done
-
-      - name: Push Docker Image to Docker Hub
-        run: |
-          for tag in $IMAGE_TAGS; do
             docker push $tag
           done
 
+      #- name: Push Docker Image to Docker Hub
+      #  run: |
+      #    for tag in $IMAGE_TAGS; do
+      #      docker push $tag
+      #    done
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
       - name: Deploy to Staging VM
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -49,27 +54,24 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            docker stop myapp || true
-            docker rm myapp || true
-            docker pull ${{ env.IMAGE }}:${{ env.APP_VERSION }}
-            docker run -d -p 8080:80 --name myapp ${{ env.IMAGE }}:${{ env.APP_VERSION }}
+            docker-compose stop staging || true
+            docker-compose start staging || true
 
+            docker-compose up -d --no-deps --build staging
 
-      #- name: Run Container
-      #  run: docker run -d -p 8080:80 --name myapp myapp:test
 
       - name: Test health endpoint
         run: |
           sleep 20
-          curl -f http://192.168.56.101:8080/doesnotexists
+          curl -f http://192.168.56.101:8080/health
 
-      - name: Set previous Run Number
-        if: always()
-        run: |
-          echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
-          echo "Previous build number set to $(( ${GITHUB_RUN_NUMBER} - 1 ))"
+      #- name: Set previous Run Number
+      #  if: always()
+      #  run: |
+      #    echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
+      #    echo "Previous build number set to $(( ${GITHUB_RUN_NUMBER} - 1 ))"
 
-      - name: Rollback to previous build
+      - name: Rollback Staging to previous build if health check fails
         if: failure()
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -77,9 +79,36 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: | 
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d -p 8080:80 --name myapp vblueice/myapp:build-${{ env.PREV_BUILD }}
+            echo "Staging health check failed. Rolling back..."
+            docker-compose stop staging
+            docker-compose rm -f staging
+            docker run -d --name staging vblueice/myapp:build-$((GITHUB_RUN_NUMBER-1))
+
+      - name: Deploy Production (Only if Staging Passed)
+        if: success()
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            docker-compose stop prod || true
+            docker-compose rm -f prod || true
+
+            docker-compose up -d --no-deps --build prod
+
+      - name: Rollback Production if Deployment Fails
+        if: failure()
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            echo "Production deployment failed. Rolling back..."
+            docker-compose stop prod
+            docker-compose rm -f prod
+            docker-compose run -d --name prod vblueice/myapp:build-$((GITHUB_RUN_NUMBER-1))
 
       - name: Create Git Tag
         run : |
@@ -89,7 +118,7 @@ jobs:
           git fetch --tags
 
           if git rev-parse "$APP_VERSION" >/dev/null 2>&1; then
-            echo "Tag $APP_VERSION already exists locally. Skipping creation. "
+            echo "Tag $APP_VERSION already exists locally. Skipping creation. "
           elif git ls-remote --tags origin | grep "refs/tags/$APP_VERSION" > /dev/null; then
             echo "Tag $APP_VERSION already exists on remote. Skipping creation. "
           else
