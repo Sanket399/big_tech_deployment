@@ -70,10 +70,10 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            docker stop myapp || true
-            docker rm myapp || true
+            docker stop myapp-staging || true
+            docker rm myapp-staging || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
-            docker run -d -p 8081:80 --name myapp vblueice/myapp:1.0.${{ github.run_number }}
+            docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.${{ github.run_number }}
 
 
       - name: Test health endpoint
@@ -99,7 +99,7 @@ jobs:
             PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
             docker stop myapp
             docker rm myapp
-            docker run -d -p 8081:80 --name myapp vblueice/myapp:1.0.$PREV_BUILD
+            docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.$PREV_BUILD
 
   prod:
     needs: staging
@@ -123,7 +123,7 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
-            docker run -d -p 8080:80 --name myapp vblueice/myapp:1.0.${{ github.run_number }}
+            docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.${{ github.run_number }}
 
       - name: Rollback Production if Deployment Fails
         if: failure()
@@ -138,7 +138,7 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
-            docker run -d -p 8080:80 --name myapp vblueice/myapp:1.0.$PREV_BUILD
+            docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.$PREV_BUILD
 
 
 
