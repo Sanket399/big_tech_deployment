@@ -106,11 +106,12 @@ jobs:
     runs-on: self-hosted
     if: ${{ needs.staging.result == 'success' }}
     steps:
+
       - name: Manual Approval
         uses: trstringer/manual-approval@v1
         with:
           approvers: ${{ secrets.PROD_APPROVERS }}
-          secret: ${{ secrets.GH_PAT }}
+          secret: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Production (Only if Staging Passed)
         uses: appleboy/ssh-action@v0.1.7
@@ -134,7 +135,7 @@ jobs:
           script: |
             echo "Production deployment failed. Rolling back..."
             PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
-            docker stop myapp || true2
+            docker stop myapp || true
             docker rm myapp || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
             docker run -d -p 8080:80 --name myapp vblueice/myapp:1.0.$PREV_BUILD
