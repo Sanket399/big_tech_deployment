@@ -97,8 +97,8 @@ jobs:
           script: |
             echo "Staging health check failed. Rolling back..."
             PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
-            docker stop myapp-staging
-            docker rm myapp
+            docker stop myapp-staging || true
+            docker rm myapp-staging || true
             docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.$PREV_BUILD
 
   prod:
