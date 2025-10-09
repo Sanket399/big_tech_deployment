@@ -231,13 +231,10 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 📸 Screenshots
 
 ### GitHub Actions Pipeline
-![Pipeline Success](screenshots/cicd-success.png)
-
-### Staging Deployment
-![Staging Container](screenshots/staging-deployment.png)
+![Pipeline Success](screenshots/successful_run.png)
 
 ### Production Approval
-![Manual Approval](screenshots/manual-approval.png)
+![Manual Approval](screenshots/approval_gates.png)
 
 ### Rollback in Action
 ![Rollback Triggered](screenshots/rollback-trigger)
