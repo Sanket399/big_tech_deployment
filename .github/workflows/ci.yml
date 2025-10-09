@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/env-separation" ]
 
 jobs:
   build:
@@ -30,56 +30,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       
-      - name: Build and Tag Docker Image
+      - name: Build and Push Docker Image
         run: |
           for tag in $IMAGE_TAGS; do
             docker build -t $tag .
-          done
-
-      - name: Push Docker Image to Docker Hub
-        run: |
-          for tag in $IMAGE_TAGS; do
             docker push $tag
           done
-
-      - name: Deploy to Staging VM
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_IP }}
-          username: ksan
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            docker stop myapp || true
-            docker rm myapp || true
-            docker pull ${{ env.IMAGE }}:${{ env.APP_VERSION }}
-            docker run -d -p 8080:80 --name myapp ${{ env.IMAGE }}:${{ env.APP_VERSION }}
-
-
-      #- name: Run Container
-      #  run: docker run -d -p 8080:80 --name myapp myapp:test
-
-      - name: Test health endpoint
-        run: |
-          sleep 20
-          curl -f http://192.168.56.101:8080/doesnotexists
-
-      - name: Set previous Run Number
-        if: always()
-        run: |
-          echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
-          echo "Previous build number set to $(( ${GITHUB_RUN_NUMBER} - 1 ))"
-
-      - name: Rollback to previous build
-        if: failure()
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_IP }}
-          username: ksan
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: | 
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d -p 8080:80 --name myapp vblueice/myapp:build-${{ env.PREV_BUILD }}
 
       - name: Create Git Tag
         run : |
@@ -97,6 +53,93 @@ jobs:
            git tag $APP_VERSION
            git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/Sanket399/big_tech_deployment.git $APP_VERSION
           fi
+      #- name: Push Docker Image to Docker Hub
+      #  run: |
+      #    for tag in $IMAGE_TAGS; do
+      #      docker push $tag
+      #    done
+
+  staging:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Deploy to Staging Env
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            docker stop myapp-staging || true
+            docker rm myapp-staging || true
+            docker pull vblueice/myapp:1.0.${{ github.run_number }}
+            docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.${{ github.run_number }}
+
+
+      - name: Test health endpoint
+        run: |
+          sleep 20
+          curl -f http://192.168.56.101:8081/health
+
+      #- name: Set previous Run Number
+      #  if: always()
+      #  run: |
+      #    echo "PREV_BUILD=$(( ${GITHUB_RUN_NUMBER} - 1 ))" >> $GITHUB_ENV
+      #    echo "Previous build number set to $(( ${GITHUB_RUN_NUMBER} - 1 ))"
+
+      - name: Rollback Staging to previous build if health check fails
+        if: failure()
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            echo "Staging health check failed. Rolling back..."
+            PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
+            docker stop myapp
+            docker rm myapp
+            docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.$PREV_BUILD
+
+  prod:
+    needs: staging
+    runs-on: self-hosted
+    if: ${{ needs.staging.result == 'success' }}
+    steps:
+
+      - name: Manual Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          approvers: ${{ secrets.PROD_APPROVERS }}
+          secret: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Production (Only if Staging Passed)
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            docker stop myapp || true
+            docker rm myapp || true
+            docker pull vblueice/myapp:1.0.${{ github.run_number }}
+            docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.${{ github.run_number }}
+
+      - name: Rollback Production if Deployment Fails
+        if: failure()
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ksan
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            echo "Production deployment failed. Rolling back..."
+            PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
+            docker stop myapp || true
+            docker rm myapp || true
+            docker pull vblueice/myapp:1.0.${{ github.run_number }}
+            docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.$PREV_BUILD
+
 
 
 
