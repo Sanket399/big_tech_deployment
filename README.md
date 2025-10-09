@@ -38,29 +38,29 @@ This project was created to understand how modern tech companies deploy applicat
        ▼
 ┌─────────────────────────────────┐
 │   GitHub Actions (Self-Hosted)  │
-│                                  │
+│                                 │
 │  1. Build Docker Image          │
 │  2. Tag (semantic + build)      │
 │  3. Push to Docker Hub          │
 │  4. Create Git Tag              │
-└────────────┬────────────────────┘
-             │
-             ▼
-    ┌────────────────┐
-    │  Docker Hub    │
-    │  Image Registry│
-    └────────┬───────┘
-             │
-             ▼
+└─────┬───────────────────────────┘
+      │
+      ▼
+┌────────────────┐
+│  Docker Hub    │
+│  Image Registry│
+└────────┬───────┘
+         │
+         ▼
 ┌────────────────────────────────┐
 │         Target VM              │
 │  (192.168.56.101)              │
 │                                │
-│  ┌──────────────────────────┐ │
-│  │  Staging Environment     │ │
-│  │  Port: 8081              │ │
-│  │  Container: myapp-staging│ │
-│  └──────────┬───────────────┘ │
+│  ┌──────────────────────────┐  │
+│  │  Staging Environment     │  │
+│  │  Port: 8081              │  │
+│  │  Container: myapp-staging│  │
+│  └──────────┬───────────────┘  │
 │             │                  │
 │             ▼                  │
 │      Health Check              │
@@ -69,11 +69,11 @@ This project was created to understand how modern tech companies deploy applicat
 │   Manual Approval Required     │
 │             │                  │
 │             ▼                  │
-│  ┌──────────────────────────┐ │
-│  │  Production Environment  │ │
-│  │  Port: 8080              │ │
-│  │  Container: myapp-prod   │ │
-│  └──────────────────────────┘ │
+│  ┌──────────────────────────┐  │ 
+│  │  Production Environment  │  │
+│  │  Port: 8080              │  │
+│  │  Container: myapp-prod   │  │
+│  └──────────────────────────┘  │
 └────────────────────────────────┘
 ```
 
@@ -231,7 +231,7 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 📸 Screenshots
 
 ### GitHub Actions Pipeline
-![Pipeline Success](screenshots/github-actions-success.png)
+![Pipeline Success](screenshots/cicd-success.png)
 
 ### Staging Deployment
 ![Staging Container](screenshots/staging-deployment.png)
@@ -239,11 +239,11 @@ This project is open source and available under the [MIT License](LICENSE).
 ### Production Approval
 ![Manual Approval](screenshots/manual-approval.png)
 
+### Rollback in Action
+![Rollback Triggered](screenshots/rollback-trigger)
+
 ### Docker Hub Registry
 ![Docker Hub](screenshots/docker-hub-tags.png)
-
-### Rollback in Action
-
 
 ---
 

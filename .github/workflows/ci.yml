@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main", "feature/env-separation" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -79,7 +79,7 @@ jobs:
       - name: Test health endpoint
         run: |
           sleep 20
-          curl -f http://192.168.56.101:8081/health
+          curl -f http://192.168.56.101:8081/does_not_exists
 
       #- name: Set previous Run Number
       #  if: always()
@@ -97,7 +97,7 @@ jobs:
           script: |
             echo "Staging health check failed. Rolling back..."
             PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
-            docker stop myapp
+            docker stop myapp-staging
             docker rm myapp
             docker run -d -p 8081:80 --name myapp-staging vblueice/myapp:1.0.$PREV_BUILD
 
@@ -120,8 +120,8 @@ jobs:
           username: ksan
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            docker stop myapp || true
-            docker rm myapp || true
+            docker stop myapp-prod || true
+            docker rm myapp-prod || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
             docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.${{ github.run_number }}
 
@@ -135,8 +135,8 @@ jobs:
           script: |
             echo "Production deployment failed. Rolling back..."
             PREV_BUILD=$(( ${{ github.run_number }} - 1 ))
-            docker stop myapp || true
-            docker rm myapp || true
+            docker stop myapp-prod || true
+            docker rm myapp-prod || true
             docker pull vblueice/myapp:1.0.${{ github.run_number }}
             docker run -d -p 8080:80 --name myapp-prod vblueice/myapp:1.0.$PREV_BUILD
 
