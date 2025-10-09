@@ -4,19 +4,14 @@ A hands-on DevOps project demonstrating enterprise-level deployment practices us
 
 [![CI Pipeline](https://github.com/Sanket399/big_tech_deployment/actions/workflows/ci.yml/badge.svg)](https://github.com/Sanket399/big_tech_deployment/actions)
 
-## Table of Contents
+## 📋 Table of Contents
 - [Project Overview](#-project-overview)
 - [Architecture](#-architecture)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
 - [Pipeline Workflow](#-pipeline-workflow)
-- [Environment Details](#-environment-details)
-- [Deployment Process](#-deployment-process)
-- [Rollback Strategy](#-rollback-strategy)
 - [What I Learned](#-what-i-learned)
 - [Future Roadmap](#-future-roadmap)
-- [Contributing](#-contributing)
 
 ---
 
@@ -246,6 +241,8 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ### Docker Hub Registry
 ![Docker Hub](screenshots/docker-hub-tags.png)
+
+### Rollback in Action
 
 
 ---
